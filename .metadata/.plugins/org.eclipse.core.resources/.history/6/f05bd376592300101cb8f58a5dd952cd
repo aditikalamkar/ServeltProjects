@@ -1,0 +1,77 @@
+package com.project.servlet;
+
+import java.io.IOException;
+import java.io.PrintWriter;
+import java.sql.Connection;
+import java.sql.DriverManager;
+import java.sql.PreparedStatement;
+import java.sql.SQLException;
+
+import javax.servlet.ServletException;
+import javax.servlet.annotation.WebServlet;
+import javax.servlet.http.HttpServlet;
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
+
+@SuppressWarnings("serial")
+@WebServlet("/register")
+public class RegisterUser extends HttpServlet {
+
+    private static final String query = "INSERT INTO userrestration(name, email, contactNo) VALUES (?, ?, ?)";
+
+    @Override
+    protected void doPost(HttpServletRequest req, HttpServletResponse res) throws ServletException, IOException {
+        res.setContentType("text/html");
+        PrintWriter pw = res.getWriter();
+
+        String name = req.getParameter("username");
+        String email = req.getParameter("email");
+        String mobileStr = req.getParameter("mobile");
+
+        if (name == null || email == null || mobileStr == null || name.isEmpty() || email.isEmpty() || mobileStr.isEmpty()) {
+            pw.println("<h2>Missing required fields. Please fill the form properly.</h2>");
+            return;
+        }
+
+        long mobile;
+        try {
+            mobile = Long.parseLong(mobileStr);
+        } catch (NumberFormatException nfe) {
+            pw.println("<h2>Invalid mobile number. Please enter digits only.</h2>");
+            return;
+        }
+
+        try {
+            Class.forName("com.mysql.cj.jdbc.Driver");
+        } catch (ClassNotFoundException cnf) {
+            cnf.printStackTrace();
+            pw.println("<h2>Database Driver not found!</h2>");
+            return;
+        }
+
+        try (Connection con = DriverManager.getConnection(
+                "jdbc:mysql://localhost:3306/serveletuserregistration", "root", "root");
+             PreparedStatement ps = con.prepareStatement(query)) {
+
+            ps.setString(1, name);
+            ps.setString(2, email);
+            ps.setLong(3, mobile);
+
+            int count = ps.executeUpdate();
+            if (count == 1) {
+                pw.println("<h2>Record is registered successfully!</h2>");
+            } else {
+                pw.println("<h2>Failed to register. Try again.</h2>");
+            }
+
+        } catch (SQLException se) {
+            se.printStackTrace();
+            pw.println("<h2>Database error: " + se.getMessage() + "</h2>");
+        }
+    }
+
+    @Override
+    protected void doGet(HttpServletRequest req, HttpServletResponse res) throws ServletException, IOException {
+        doPost(req, res); // So even GET calls will be processed.
+    }
+}

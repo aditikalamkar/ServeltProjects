@@ -1,0 +1,70 @@
+package com.project.servelt;
+
+import java.io.IOException;
+import java.io.PrintWriter;
+import java.sql.Connection;
+import java.sql.DriverManager;
+import java.sql.PreparedStatement;
+import java.sql.SQLException;
+
+import javax.servlet.ServletException;
+import javax.servlet.annotation.WebServlet;
+import javax.servlet.http.HttpServlet;
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
+
+import com.mysql.cj.Query;
+
+@WebServlet("/register")
+public class RegisterUser extends HttpServlet {
+
+	private static final String query = "INSERT INTO userrestration(name , email ,contactNo)values (?,?,?)";
+	@Override
+	protected void doGet(HttpServletRequest req, HttpServletResponse res) throws ServletException, IOException {
+		PrintWriter pw = res.getWriter();
+		
+		res.setContentType("text/html");
+		
+		String name = req.getParameter("username");
+		String email = req.getParameter("email");
+		int mobile =Integer.parseInt(req.getParameter("mobile"));
+		
+		try {
+			Class.forName("com.mysql.cj.jdbc.Driver");
+		}catch(ClassNotFoundException cnf) {
+			cnf.printStackTrace();
+		}
+	
+	
+	try(Connection con = DriverManager.getConnection("jdbc:mysql://serveletuserregistration","root","root");
+			PreparedStatement ps = con.prepareStatement(query);) {
+		
+		ps.setString(1, name);
+		ps.setString(2, email);
+		ps.setInt(3, mobile);
+		
+		int count = ps.executeUpdate();
+		if(count  == 1) {
+			pw.println("<h2>Record is registerd successfully...</h2>");
+		}
+		else {
+			pw.println("<h2>Record is not registerd...</h2>");
+		}
+		
+	
+	}catch(SQLException  se) {
+		se.printStackTrace();
+		pw.println("<h1>"+se.getMessage()+"</h1>");
+		
+	}catch(Exception e) {
+		e.printStackTrace();
+		pw.println("<h1>"+e.getMessage()+"</h1>");
+}
+	}
+	@Override
+	protected void doPost(HttpServletRequest req, HttpServletResponse res) throws ServletException, IOException {
+		// TODO Auto-generated method stub
+		
+		doPost(req, res);
+	}
+}
